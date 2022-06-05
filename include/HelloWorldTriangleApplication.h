@@ -10,12 +10,13 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <optional>
 
 namespace TriangleApplication
 {
     struct QueueFamilyIndices
     {
-        uint32_t graphicsFamily;
+        std::optional<uint32_t> graphicsFamily;
     };
 
     class HelloWorldTriangleApplication
