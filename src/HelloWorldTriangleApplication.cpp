@@ -117,6 +117,21 @@ namespace TriangleApplication
     }
     QueueFamilyIndices HelloWorldTriangleApplication::findQueueFamilies(VkPhysicalDevice device){
         QueueFamilyIndices indices;
+
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+        int i = 0;
+        for(const auto& queueFamily : queueFamilies){
+            if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT){
+                indices.graphicsFamily = i;
+            }
+            i++;
+        }
+
         return indices;
     }
     std::vector<const char *> HelloWorldTriangleApplication::getRequiredExtensions()
@@ -198,8 +213,6 @@ namespace TriangleApplication
         //Optional features like texture compression, 64 bit floats and multi viewport rendering
         VkPhysicalDeviceFeatures deviceFeatures;
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
-
 
         return true;
     }
