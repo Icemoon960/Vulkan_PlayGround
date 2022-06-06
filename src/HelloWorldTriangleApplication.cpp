@@ -33,6 +33,20 @@ namespace TriangleApplication
 #pragma endregion
 
 #pragma region Dynamic Funktions
+    bool HelloWorldTriangleApplication::checkDeviceExtensionSupport(VkPhysicalDevice device)
+    {
+        uint32_t extensionCount;
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+
+        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+        for(const auto& extension : availableExtensions){
+            requiredExtensions.erase(extension.extensionName);
+        }
+        return requiredExtensions.empty();
+    }
     bool HelloWorldTriangleApplication::checkValidationLayerSupport()
     {
         uint32_t layerCount;
@@ -59,18 +73,39 @@ namespace TriangleApplication
         }
         return true;
     }
+    VkPresentModeKHR HelloWorldTriangleApplication::choosePresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes){
+        for(const auto& availablePresentMode : availablePresentModes){
+            if(availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR){
+                return availablePresentMode;
+            }
+        }
+        //TODO: Log which PrensetMode was uesed..
+        return VK_PRESENT_MODE_FIFO_KHR;
+    }
+    VkExtent2D HelloWorldTriangleApplication::chooseSwapExtend(const VkSurfaceCapabilitiesKHR& capabilities){
+
+    }
+    VkSurfaceFormatKHR HelloWorldTriangleApplication::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats){
+        for(const auto& availableFormat : availableFormats){
+            if(availableFormat.format == VK_FORMAT_B8G8R8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR){
+                return availableFormat;
+            }
+        }
+        //TODO: Log that the first ColorFormat was uesed..
+        return availableFormats[0];
+    }
     void HelloWorldTriangleApplication::cleanUp()
     {
+        vkDestroyDevice(logicalDevice, nullptr);
         if (enableValidationLayers)
         {
             DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
         }
-
+        vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);
         glfwDestroyWindow(window);
         glfwTerminate();
     }
-
     void HelloWorldTriangleApplication::createInstace()
     {
         if (enableValidationLayers && !checkValidationLayerSupport())
@@ -115,6 +150,56 @@ namespace TriangleApplication
             throw std::runtime_error("failed to create instance");
         };
     }
+    void HelloWorldTriangleApplication::createLogicalDevice()
+    {
+        QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+        std::set<uint32_t> uinqueQueueFamailies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+
+        float queuePriority = 1.0f;
+        for (auto queueFamily : uinqueQueueFamailies)
+        {
+            VkDeviceQueueCreateInfo queueCreateInfo{};
+            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+            queueCreateInfo.queueCount = 1;
+            queueCreateInfo.pQueuePriorities = &queuePriority;
+            queueCreateInfos.push_back(queueCreateInfo);
+        }
+
+        VkPhysicalDeviceFeatures deviceFeatures{};
+        VkDeviceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+        createInfo.pQueueCreateInfos = queueCreateInfos.data();
+        createInfo.pEnabledFeatures = &deviceFeatures;
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+        if (enableValidationLayers)
+        {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+        }
+        else
+        {
+            createInfo.enabledLayerCount = 0;
+        }
+
+        if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &logicalDevice) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create logical device!");
+        }
+        vkGetDeviceQueue(logicalDevice, indices.graphicsFamily.value(), 0, &graphicsQueue);
+        vkGetDeviceQueue(logicalDevice, indices.graphicsFamily.value(), 0, &presentQueue);
+    }
+    void HelloWorldTriangleApplication::createSurface()
+    {
+        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create window surface!");
+        }
+    }
     QueueFamilyIndices HelloWorldTriangleApplication::findQueueFamilies(VkPhysicalDevice device)
     {
         QueueFamilyIndices indices;
@@ -125,11 +210,18 @@ namespace TriangleApplication
         std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
+        VkBool32 presentSupport = false;
+
         int i = 0;
         for (const auto &queueFamily : queueFamilies)
         {
             if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
             {
+                vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+                if (presentSupport)
+                {
+                    indices.presentFamily = i;
+                }
                 indices.graphicsFamily = i;
                 break;
             }
@@ -201,16 +293,17 @@ namespace TriangleApplication
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
     }
-
     void HelloWorldTriangleApplication::initVulkan()
     {
         createInstace();
         setupDebugMessenger();
+        createSurface();
         pickPhysicalDevice();
+        createLogicalDevice();
     }
     bool HelloWorldTriangleApplication::isDeviceSuitable(VkPhysicalDevice device)
     {
-
+        /*
         // Basic device properties like the name, type and supported Vulkan version
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -218,10 +311,19 @@ namespace TriangleApplication
         // Optional features like texture compression, 64 bit floats and multi viewport rendering
         VkPhysicalDeviceFeatures deviceFeatures;
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+        */
+
+        bool requiredExtensionsSupported = checkDeviceExtensionSupport(device);
 
         QueueFamilyIndices indices = findQueueFamilies(device);
 
-        return indices.graphicsFamily.has_value();
+        bool swapChainSupported = false;
+        if(requiredExtensionsSupported){
+            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
+            swapChainSupported = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+        }
+
+        return indices.isComplete() && requiredExtensionsSupported && swapChainSupported;
     }
     void HelloWorldTriangleApplication::mainLoop()
     {
@@ -264,6 +366,27 @@ namespace TriangleApplication
         createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
         createInfo.pfnUserCallback = this->debugCallback;
         createInfo.pUserData = nullptr; // Optional
+    }
+    SwapChainSupportDetails HelloWorldTriangleApplication::querySwapChainSupport(VkPhysicalDevice device){
+        SwapChainSupportDetails details;
+
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+        uint32_t formatsCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatsCount, nullptr);
+        if(formatsCount != 0){
+            details.formats.resize(formatsCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatsCount, details.formats.data());
+        }
+        
+        uint32_t presentModesCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModesCount, nullptr);
+        if(presentModesCount != 0){
+            details.presentModes.resize(presentModesCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModesCount, details.presentModes.data());
+        }
+
+        return details;
     }
     void HelloWorldTriangleApplication::run()
     {

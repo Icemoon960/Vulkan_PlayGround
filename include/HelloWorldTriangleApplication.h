@@ -11,15 +11,23 @@
 #include <string>
 #include <cstring>
 #include <optional>
+#include <set>
 
 namespace TriangleApplication
 {
+    struct SwapChainSupportDetails{
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
+    };
+
     struct QueueFamilyIndices
     {
         std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> presentFamily;
         bool isComplete()
         {
-            return graphicsFamily.has_value();
+            return graphicsFamily.has_value() && presentFamily.has_value();
         }
     };
 
@@ -31,6 +39,8 @@ namespace TriangleApplication
     private:
         void cleanUp();
         void createInstace();
+        void createLogicalDevice();
+        void createSurface();
         void initWindow();
         void initVulkan();
         void mainLoop();
@@ -38,9 +48,14 @@ namespace TriangleApplication
         void pickPhysicalDevice();
         void setupDebugMessenger();
 
+        bool checkDeviceExtensionSupport(VkPhysicalDevice device);
         bool checkValidationLayerSupport();
         bool isDeviceSuitable(VkPhysicalDevice device);
+        VkPresentModeKHR choosePresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+        VkExtent2D chooseSwapExtend(const VkSurfaceCapabilitiesKHR& capabilities);
+        VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
         QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+        SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
         std::vector<const char *> getRequiredExtensions();
 
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageSeverityFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData);
@@ -48,16 +63,20 @@ namespace TriangleApplication
         const uint32_t WIDTH = 800;
         const uint32_t HEIGHT = 600;
         const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+        const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 #ifdef NDEBUG
         const bool enableValidationLayers = false;
 #else
         const bool enableValidationLayers = true;
 #endif
-
-        GLFWwindow *window;
-        VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
+        VkDevice logicalDevice;
+        VkQueue graphicsQueue;
+        VkInstance instance;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+        VkQueue presentQueue;
+        VkSurfaceKHR surface;
+        GLFWwindow *window;
     };
 }
 #endif /* AC79E733_933A_4E39_816C_CDA7F4FC8A53 */
