@@ -59,6 +59,7 @@ namespace TriangleApplication
         bool checkValidationLayerSupport();
         bool isDeviceSuitable(VkPhysicalDevice device);
         VkPresentModeKHR choosePresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+        VkShaderModule createShaderModule(const std::vector<char>& code);
         VkExtent2D chooseSwapExtend(const VkSurfaceCapabilitiesKHR& capabilities);
         VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
         QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);

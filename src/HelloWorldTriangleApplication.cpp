@@ -151,6 +151,27 @@ namespace TriangleApplication
     void HelloWorldTriangleApplication::createGraphicsPipeline(){
         auto vertShaderCode = readFile(".shaders/vert.spv");
         auto fragShaderCode = readFile(".shaders/frag.spv");
+
+        VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+        VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+
+        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vertShaderStageInfo.module = vertShaderModule;
+        vertShaderStageInfo.pName = "main";
+        //pSpecializationInfo allows you to specify values for shader constants.        
+
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragShaderStageInfo.module = fragShaderModule;
+        fragShaderStageInfo.pName = "main";    
+
+        VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};    
+
+        vkDestroyShaderModule(logicalDevice,fragShaderModule, nullptr);
+        vkDestroyShaderModule(logicalDevice,vertShaderModule, nullptr);
     }
     void HelloWorldTriangleApplication::createInstace()
     {
@@ -265,6 +286,19 @@ namespace TriangleApplication
         }
         vkGetDeviceQueue(logicalDevice, indices.graphicsFamily.value(), 0, &graphicsQueue);
         vkGetDeviceQueue(logicalDevice, indices.graphicsFamily.value(), 0, &presentQueue);
+    }
+    VkShaderModule HelloWorldTriangleApplication::createShaderModule(const std::vector<char>& code){
+        VkShaderModuleCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = code.size();
+        createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+        VkShaderModule shaderModule;
+        if(vkCreateShaderModule(logicalDevice, &createInfo, nullptr, &shaderModule) != VK_SUCCESS){
+            throw std::runtime_error("failed to create another module!");
+        }
+
+        return shaderModule;
     }
     void HelloWorldTriangleApplication::createSurface()
     {
