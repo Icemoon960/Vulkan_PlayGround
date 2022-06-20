@@ -12,6 +12,9 @@
 #include <cstring>
 #include <optional>
 #include <set>
+#include <limits>
+#include <algorithm>
+#include <cstdint>
 
 namespace TriangleApplication
 {
@@ -41,6 +44,7 @@ namespace TriangleApplication
         void createInstace();
         void createLogicalDevice();
         void createSurface();
+        void createSwapChain();
         void initWindow();
         void initVulkan();
         void mainLoop();
@@ -70,12 +74,16 @@ namespace TriangleApplication
         const bool enableValidationLayers = true;
 #endif
         VkDebugUtilsMessengerEXT debugMessenger;
-        VkDevice logicalDevice;
         VkQueue graphicsQueue;
         VkInstance instance;
+        VkDevice logicalDevice;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         VkQueue presentQueue;
         VkSurfaceKHR surface;
+        VkSwapchainKHR swapChain;
+        std::vector<VkImage> swapChainImages;
+        VkFormat swapChainFormat;
+        VkExtent2D swapChainExtend;
         GLFWwindow *window;
     };
 }
