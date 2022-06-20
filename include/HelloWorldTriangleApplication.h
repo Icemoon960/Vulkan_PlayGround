@@ -46,6 +46,7 @@ namespace TriangleApplication
         void createInstace();
         void createImageViews();
         void createLogicalDevice();
+        void createRenderPass();
         void createSurface();
         void createSwapChain();
         void initWindow();
@@ -84,11 +85,13 @@ namespace TriangleApplication
         VkDevice logicalDevice;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         VkQueue presentQueue;
+        VkPipelineLayout pipelinelayout;
+        VkRenderPass renderPass;
         VkSurfaceKHR surface;
         VkSwapchainKHR swapChain;
         std::vector<VkImage> swapChainImages;
         std::vector<VkImageView> swapChainImageViews;
-        VkFormat swapChainFormat;
+        VkFormat swapChainImageFormat;
         VkExtent2D swapChainExtend;
         GLFWwindow *window;
     };
