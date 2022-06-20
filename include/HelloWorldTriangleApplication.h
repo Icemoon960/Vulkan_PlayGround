@@ -42,6 +42,7 @@ namespace TriangleApplication
 
     private:
         void cleanUp();
+        void createFramebuffers();
         void createGraphicsPipeline();
         void createInstace();
         void createImageViews();
@@ -80,7 +81,8 @@ namespace TriangleApplication
         const bool enableValidationLayers = true;
 #endif
         VkDebugUtilsMessengerEXT debugMessenger;
-        VkQueue graphicsQueue;
+
+        VkQueue graphicsQueue;        
         VkPipeline graphicsPipeline;
         VkInstance instance;
         VkDevice logicalDevice;
@@ -90,6 +92,7 @@ namespace TriangleApplication
         VkRenderPass renderPass;
         VkSurfaceKHR surface;
         VkSwapchainKHR swapChain;
+        std::vector<VkFramebuffer> swapChainFramebuffers;
         std::vector<VkImage> swapChainImages;
         std::vector<VkImageView> swapChainImageViews;
         VkFormat swapChainImageFormat;

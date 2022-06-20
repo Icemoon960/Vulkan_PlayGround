@@ -134,6 +134,9 @@ namespace TriangleApplication
     }
     void HelloWorldTriangleApplication::cleanUp()
     {
+        for (auto framebuffer : swapChainFramebuffers) {
+            vkDestroyFramebuffer(logicalDevice, framebuffer, nullptr);
+        }
         vkDestroyPipeline(logicalDevice, graphicsPipeline, nullptr);
         vkDestroyPipelineLayout(logicalDevice, pipelinelayout, nullptr);
         vkDestroyRenderPass(logicalDevice, renderPass, nullptr);
@@ -150,6 +153,27 @@ namespace TriangleApplication
         vkDestroyInstance(instance, nullptr);
         glfwDestroyWindow(window);
         glfwTerminate();
+    }
+    void HelloWorldTriangleApplication::createFramebuffers(){
+        swapChainFramebuffers.resize(swapChainImageViews.size());
+        for(size_t i = 0; i < swapChainImageViews.size(); i++){
+            VkImageView attachments[]{
+                swapChainImageViews[i]
+            };
+
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO; 
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = attachments;
+            framebufferInfo.width = swapChainExtend.width;
+            framebufferInfo.height = swapChainExtend.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(logicalDevice, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create framebuffer!");
+            }
+        }        
     }
     void HelloWorldTriangleApplication::createGraphicsPipeline(){
         auto vertShaderCode = readFile(".shaders/vert.spv");
