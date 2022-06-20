@@ -42,6 +42,7 @@ namespace TriangleApplication
     private:
         void cleanUp();
         void createInstace();
+        void createImageViews();
         void createLogicalDevice();
         void createSurface();
         void createSwapChain();
@@ -82,6 +83,7 @@ namespace TriangleApplication
         VkSurfaceKHR surface;
         VkSwapchainKHR swapChain;
         std::vector<VkImage> swapChainImages;
+        std::vector<VkImageView> swapChainImageViews;
         VkFormat swapChainFormat;
         VkExtent2D swapChainExtend;
         GLFWwindow *window;
