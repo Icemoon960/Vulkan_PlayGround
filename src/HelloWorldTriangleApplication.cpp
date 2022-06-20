@@ -30,6 +30,21 @@ namespace TriangleApplication
         std::cerr << "Validation Layer: " << pCallbackData->pMessage << std::endl;
         return VK_FALSE;
     }
+    std::vector<char> HelloWorldTriangleApplication::readFile(const std::string& filename){
+        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+        if(!file.is_open()){
+            throw std::runtime_error(std::string("failed to open file: ") + filename);
+        }
+
+        size_t fileSize = (size_t)file.tellg();
+        std::vector<char> buffer(fileSize);
+        file.seekg(0);
+        file.read(buffer.data(), fileSize);
+        file.close();
+        std::cout << "Red file " << filename << " in buffer of " << (buffer.size()/sizeof(char)) << " byte" << std::endl;
+
+        return buffer;
+    }
 #pragma endregion
 
 #pragma region Dynamic Funktions
@@ -132,6 +147,10 @@ namespace TriangleApplication
         vkDestroyInstance(instance, nullptr);
         glfwDestroyWindow(window);
         glfwTerminate();
+    }
+    void HelloWorldTriangleApplication::createGraphicsPipeline(){
+        auto vertShaderCode = readFile(".shaders/vert.spv");
+        auto fragShaderCode = readFile(".shaders/frag.spv");
     }
     void HelloWorldTriangleApplication::createInstace()
     {
@@ -411,6 +430,7 @@ namespace TriangleApplication
         createLogicalDevice();
         createSwapChain();
         createImageViews();
+        createGraphicsPipeline();
     }
     bool HelloWorldTriangleApplication::isDeviceSuitable(VkPhysicalDevice device)
     {

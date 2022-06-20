@@ -15,6 +15,7 @@
 #include <limits>
 #include <algorithm>
 #include <cstdint>
+#include <fstream>
 
 namespace TriangleApplication
 {
@@ -41,6 +42,7 @@ namespace TriangleApplication
 
     private:
         void cleanUp();
+        void createGraphicsPipeline();
         void createInstace();
         void createImageViews();
         void createLogicalDevice();
@@ -62,8 +64,9 @@ namespace TriangleApplication
         QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
         std::vector<const char *> getRequiredExtensions();
-
+        
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageSeverityFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData);
+        static std::vector<char> readFile(const std::string& filename);
 
         const uint32_t WIDTH = 800;
         const uint32_t HEIGHT = 600;
