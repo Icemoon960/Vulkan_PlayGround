@@ -81,6 +81,7 @@ namespace TriangleApplication
 #endif
         VkDebugUtilsMessengerEXT debugMessenger;
         VkQueue graphicsQueue;
+        VkPipeline graphicsPipeline;
         VkInstance instance;
         VkDevice logicalDevice;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
