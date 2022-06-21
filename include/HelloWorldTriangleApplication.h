@@ -42,6 +42,8 @@ namespace TriangleApplication
 
     private:
         void cleanUp();
+        void createCommandBuffer();
+        void createCommandPool();
         void createFramebuffers();
         void createGraphicsPipeline();
         void createInstace();
@@ -55,6 +57,7 @@ namespace TriangleApplication
         void mainLoop();
         void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
         void pickPhysicalDevice();
+        void recordCommandBuffer(VkCommandBuffer cmdBuffer, uint32_t imageIndex);
         void setupDebugMessenger();
 
         bool checkDeviceExtensionSupport(VkPhysicalDevice device);
@@ -82,6 +85,8 @@ namespace TriangleApplication
 #endif
         VkDebugUtilsMessengerEXT debugMessenger;
 
+        VkCommandBuffer commandBuffer;
+        VkCommandPool commandPool;
         VkQueue graphicsQueue;        
         VkPipeline graphicsPipeline;
         VkInstance instance;
