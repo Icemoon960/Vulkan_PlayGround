@@ -50,8 +50,10 @@ namespace TriangleApplication
         void createImageViews();
         void createLogicalDevice();
         void createRenderPass();
-        void createSurface();
+        void createSurface();        
         void createSwapChain();
+        void createSyncObjects();
+        void drawFrame();
         void initWindow();
         void initVulkan();
         void mainLoop();
@@ -89,11 +91,14 @@ namespace TriangleApplication
         VkCommandPool commandPool;
         VkQueue graphicsQueue;        
         VkPipeline graphicsPipeline;
+        VkSemaphore imageAvailableSemaphore;
+        VkFence inFlightFence;
         VkInstance instance;
         VkDevice logicalDevice;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         VkQueue presentQueue;
         VkPipelineLayout pipelinelayout;
+        VkSemaphore renderFinishedSemaphore;
         VkRenderPass renderPass;
         VkSurfaceKHR surface;
         VkSwapchainKHR swapChain;
