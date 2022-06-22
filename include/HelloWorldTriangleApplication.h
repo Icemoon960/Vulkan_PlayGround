@@ -16,10 +16,21 @@
 #include <algorithm>
 #include <cstdint>
 #include <fstream>
+#include <glm/glm.hpp>
+#include <array>
 
 namespace TriangleApplication
-{    
-    struct SwapChainSupportDetails{
+{
+    struct Vertex
+    {
+        glm::vec2 pos;
+        glm::vec3 color;
+        static VkVertexInputBindingDescription getBindingDescription();
+        static std::array<VkVertexInputAttributeDescription, 2>getAttributeDescriptions();
+    };
+
+    struct SwapChainSupportDetails
+    {
         VkSurfaceCapabilitiesKHR capabilities;
         std::vector<VkSurfaceFormatKHR> formats;
         std::vector<VkPresentModeKHR> presentModes;
@@ -29,10 +40,7 @@ namespace TriangleApplication
     {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
-        bool isComplete()
-        {
-            return graphicsFamily.has_value() && presentFamily.has_value();
-        }
+        bool isComplete();
     };
 
     class HelloWorldTriangleApplication
@@ -51,7 +59,7 @@ namespace TriangleApplication
         void createImageViews();
         void createLogicalDevice();
         void createRenderPass();
-        void createSurface();        
+        void createSurface();
         void createSwapChain();
         void createSyncObjects();
         void drawFrame();
@@ -67,22 +75,28 @@ namespace TriangleApplication
         bool checkDeviceExtensionSupport(VkPhysicalDevice device);
         bool checkValidationLayerSupport();
         bool isDeviceSuitable(VkPhysicalDevice device);
-        VkPresentModeKHR choosePresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-        VkShaderModule createShaderModule(const std::vector<char>& code);
-        VkExtent2D chooseSwapExtend(const VkSurfaceCapabilitiesKHR& capabilities);
-        VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+
+        VkPresentModeKHR choosePresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
+        VkShaderModule createShaderModule(const std::vector<char> &code);
+        VkExtent2D chooseSwapExtend(const VkSurfaceCapabilitiesKHR &capabilities);
+        VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
         QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
         std::vector<const char *> getRequiredExtensions();
-        
+
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageSeverityFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData);
-        static void frameBufferResizedCallback(GLFWwindow* window, int width, int height);
-        static std::vector<char> readFile(const std::string& filename);
+        static void frameBufferResizedCallback(GLFWwindow *window, int width, int height);
+        static std::vector<char> readFile(const std::string &filename);
 
         const uint32_t WIDTH = 800;
         const uint32_t HEIGHT = 600;
         const int MAX_FRAMES_IN_FLIGHT = 2;
         const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+        // Color and position combined into one array of vertices, known as interleaving vertex
+        const std::vector<Vertex> vertices = {
+            {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+            {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+            {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
         const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 #ifdef NDEBUG
         const bool enableValidationLayers = false;
@@ -92,7 +106,7 @@ namespace TriangleApplication
         bool frameBufferResized = false;
         VkCommandPool commandPool;
         VkDebugUtilsMessengerEXT debugMessenger;
-        VkQueue graphicsQueue;        
+        VkQueue graphicsQueue;
         VkPipeline graphicsPipeline;
         VkInstance instance;
         VkDevice logicalDevice;

@@ -23,15 +23,16 @@ namespace TriangleApplication
             func(instance, debugMessenger, pAllocator);
         }
     }
-
+#pragma region HelloWorldTriangleApplication
 #pragma region Static Funktions
     VKAPI_ATTR VkBool32 VKAPI_CALL HelloWorldTriangleApplication::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageSeverityFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData)
     {
         std::cerr << "Validation Layer: " << pCallbackData->pMessage << std::endl;
         return VK_FALSE;
     }
-    void HelloWorldTriangleApplication::frameBufferResizedCallback(GLFWwindow* window, int width, int height){
-        auto app = reinterpret_cast<HelloWorldTriangleApplication*>(glfwGetWindowUserPointer(window));
+    void HelloWorldTriangleApplication::frameBufferResizedCallback(GLFWwindow *window, int width, int height)
+    {
+        auto app = reinterpret_cast<HelloWorldTriangleApplication *>(glfwGetWindowUserPointer(window));
         app->frameBufferResized = true;
     }
     std::vector<char> HelloWorldTriangleApplication::readFile(const std::string &filename)
@@ -52,7 +53,6 @@ namespace TriangleApplication
         return buffer;
     }
 #pragma endregion
-
 #pragma region Dynamic Funktions
     bool HelloWorldTriangleApplication::checkDeviceExtensionSupport(VkPhysicalDevice device)
     {
@@ -249,10 +249,15 @@ namespace TriangleApplication
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
+        auto bindingDescription = Vertex::getBindingDescription();
+        auto attributeDescription = Vertex::getAttributeDescriptions();
+
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size());
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescription.data();
         /*
             The pVertexBindingDescriptions and pVertexAttributeDescriptions members point to an array of structs that describe
             the aforementioned details for loading vertex data. Add this structure to the createGraphicsPipeline function right
@@ -940,7 +945,8 @@ namespace TriangleApplication
     {
         int width = 0, height = 0;
         glfwGetFramebufferSize(window, &width, &height);
-        while(width == 0 || height == 0){
+        while (width == 0 || height == 0)
+        {
             glfwGetFramebufferSize(window, &width, &height);
             glfwWaitEvents();
         }
@@ -983,4 +989,36 @@ namespace TriangleApplication
         }
     }
 #pragma endregion
+#pragma endregion
+#pragma region QueueFamilyIndices
+    bool QueueFamilyIndices::isComplete()
+    {
+        return graphicsFamily.has_value() && presentFamily.has_value();
+    }
+#pragma endregion
+#pragma region Vertex
+    VkVertexInputBindingDescription Vertex::getBindingDescription()
+    {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(Vertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescription;
+    }
+    std::array<VkVertexInputAttributeDescription, 2> Vertex::getAttributeDescriptions(){
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+        return attributeDescriptions;
+    }
+#pragma endregion
+
 }
