@@ -18,7 +18,7 @@
 #include <fstream>
 
 namespace TriangleApplication
-{
+{    
     struct SwapChainSupportDetails{
         VkSurfaceCapabilitiesKHR capabilities;
         std::vector<VkSurfaceFormatKHR> formats;
@@ -38,11 +38,11 @@ namespace TriangleApplication
     class HelloWorldTriangleApplication
     {
     public:
-        void run();
+        void Run();
 
     private:
         void cleanUp();
-        void createCommandBuffer();
+        void createCommandBuffers();
         void createCommandPool();
         void createFramebuffers();
         void createGraphicsPipeline();
@@ -78,6 +78,7 @@ namespace TriangleApplication
 
         const uint32_t WIDTH = 800;
         const uint32_t HEIGHT = 600;
+        const int MAX_FRAMES_IN_FLIGHT = 2;
         const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
         const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 #ifdef NDEBUG
@@ -87,21 +88,21 @@ namespace TriangleApplication
 #endif
         VkDebugUtilsMessengerEXT debugMessenger;
 
-        VkCommandBuffer commandBuffer;
         VkCommandPool commandPool;
         VkQueue graphicsQueue;        
         VkPipeline graphicsPipeline;
-        VkSemaphore imageAvailableSemaphore;
-        VkFence inFlightFence;
         VkInstance instance;
         VkDevice logicalDevice;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         VkQueue presentQueue;
         VkPipelineLayout pipelinelayout;
-        VkSemaphore renderFinishedSemaphore;
         VkRenderPass renderPass;
         VkSurfaceKHR surface;
         VkSwapchainKHR swapChain;
+        std::vector<VkCommandBuffer> commandBuffers;
+        std::vector<VkFence> inFlightFences;
+        std::vector<VkSemaphore> imageAvailableSemaphores;
+        std::vector<VkSemaphore> renderFinishedSemaphores;
         std::vector<VkFramebuffer> swapChainFramebuffers;
         std::vector<VkImage> swapChainImages;
         std::vector<VkImageView> swapChainImageViews;

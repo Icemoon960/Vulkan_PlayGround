@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 
     try
     {
-        app.run();
+        app.Run();
     }
     catch (const std::exception &e)
     {
