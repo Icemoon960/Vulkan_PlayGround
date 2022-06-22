@@ -42,6 +42,7 @@ namespace TriangleApplication
 
     private:
         void cleanUp();
+        void cleanupSwapChain();
         void createCommandBuffers();
         void createCommandPool();
         void createFramebuffers();
@@ -60,6 +61,7 @@ namespace TriangleApplication
         void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
         void pickPhysicalDevice();
         void recordCommandBuffer(VkCommandBuffer cmdBuffer, uint32_t imageIndex);
+        void recreateSwapChain();
         void setupDebugMessenger();
 
         bool checkDeviceExtensionSupport(VkPhysicalDevice device);
@@ -74,6 +76,7 @@ namespace TriangleApplication
         std::vector<const char *> getRequiredExtensions();
         
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageSeverityFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData);
+        static void frameBufferResizedCallback(GLFWwindow* window, int width, int height);
         static std::vector<char> readFile(const std::string& filename);
 
         const uint32_t WIDTH = 800;
@@ -86,16 +89,16 @@ namespace TriangleApplication
 #else
         const bool enableValidationLayers = true;
 #endif
-        VkDebugUtilsMessengerEXT debugMessenger;
-
+        bool frameBufferResized = false;
         VkCommandPool commandPool;
+        VkDebugUtilsMessengerEXT debugMessenger;
         VkQueue graphicsQueue;        
         VkPipeline graphicsPipeline;
         VkInstance instance;
         VkDevice logicalDevice;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         VkQueue presentQueue;
-        VkPipelineLayout pipelinelayout;
+        VkPipelineLayout pipelineLayout;
         VkRenderPass renderPass;
         VkSurfaceKHR surface;
         VkSwapchainKHR swapChain;
