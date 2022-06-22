@@ -140,7 +140,8 @@ namespace TriangleApplication
     void HelloWorldTriangleApplication::cleanUp()
     {
         cleanupSwapChain();
-
+        vkDestroyBuffer(logicalDevice, vertexBuffer, nullptr);
+        vkFreeMemory(logicalDevice, vertexBufferMemory, nullptr);
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             vkDestroySemaphore(logicalDevice, imageAvailableSemaphores[i], nullptr);
@@ -641,6 +642,42 @@ namespace TriangleApplication
             }
         }
     }
+    void HelloWorldTriangleApplication::createVertexBuffer()
+    {
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = sizeof(vertices[0]) * vertices.size();
+        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateBuffer(logicalDevice, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create certex buffer!");
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(logicalDevice, vertexBuffer, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        if (vkAllocateMemory(logicalDevice, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to allocate vertex buffer memory!");
+        }
+        vkBindBufferMemory(logicalDevice, vertexBuffer, vertexBufferMemory, 0);
+
+        /*
+        Call vkFlushMappedMemoryRanges after writing to the mapped memory,
+        and call vkInvalidateMappedMemoryRanges before reading from the mapped memory
+        */
+        void *data;
+        vkMapMemory(logicalDevice, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
+        memcpy(data, vertices.data(), (size_t)bufferInfo.size);
+        vkUnmapMemory(logicalDevice, vertexBufferMemory);
+    }
     void HelloWorldTriangleApplication::drawFrame()
     {
         uint32_t currentFrame = 0;
@@ -706,6 +743,19 @@ namespace TriangleApplication
         }
 
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+    uint32_t HelloWorldTriangleApplication::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+    {
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            if (typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
+                return i;
+            }
+        }
+        throw std::runtime_error("failed to find suitable memory type!");
     }
     QueueFamilyIndices HelloWorldTriangleApplication::findQueueFamilies(VkPhysicalDevice device)
     {
@@ -815,6 +865,7 @@ namespace TriangleApplication
         createGraphicsPipeline();
         createFramebuffers();
         createCommandPool();
+        createVertexBuffer();
         createCommandBuffers();
         createSyncObjects();
     }
@@ -934,7 +985,10 @@ namespace TriangleApplication
 
         vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-        vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(cmdBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdDraw(cmdBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
         vkCmdEndRenderPass(cmdBuffer);
         if (vkEndCommandBuffer(cmdBuffer) != VK_SUCCESS)
         {
@@ -1006,7 +1060,8 @@ namespace TriangleApplication
 
         return bindingDescription;
     }
-    std::array<VkVertexInputAttributeDescription, 2> Vertex::getAttributeDescriptions(){
+    std::array<VkVertexInputAttributeDescription, 2> Vertex::getAttributeDescriptions()
+    {
         std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;

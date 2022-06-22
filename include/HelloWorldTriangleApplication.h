@@ -62,6 +62,7 @@ namespace TriangleApplication
         void createSurface();
         void createSwapChain();
         void createSyncObjects();
+        void createVertexBuffer();
         void drawFrame();
         void initWindow();
         void initVulkan();
@@ -80,6 +81,7 @@ namespace TriangleApplication
         VkShaderModule createShaderModule(const std::vector<char> &code);
         VkExtent2D chooseSwapExtend(const VkSurfaceCapabilitiesKHR &capabilities);
         VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
+        uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
         std::vector<const char *> getRequiredExtensions();
@@ -94,7 +96,7 @@ namespace TriangleApplication
         const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
         // Color and position combined into one array of vertices, known as interleaving vertex
         const std::vector<Vertex> vertices = {
-            {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+            {{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
             {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
             {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
         const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -125,6 +127,8 @@ namespace TriangleApplication
         std::vector<VkImageView> swapChainImageViews;
         VkFormat swapChainImageFormat;
         VkExtent2D swapChainExtend;
+        VkBuffer vertexBuffer;
+        VkDeviceMemory vertexBufferMemory;
         GLFWwindow *window;
     };
 }
