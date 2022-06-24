@@ -58,6 +58,7 @@ namespace TriangleApplication
         void createCommandPools();
         void createFramebuffers();
         void createGraphicsPipeline();
+        void createIndexBuffer();
         void createInstace();
         void createImageViews();
         void createLogicalDevice();
@@ -96,12 +97,15 @@ namespace TriangleApplication
         const uint32_t WIDTH = 800;
         const uint32_t HEIGHT = 600;
         const int MAX_FRAMES_IN_FLIGHT = 2;
+        const std::vector<uint16_t> indicies = {0, 1, 2, 2, 3, 0};
         const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
         // Color and position combined into one array of vertices, known as interleaving vertex
         const std::vector<Vertex> vertices = {
-            {{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
-            {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+            {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+            {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+            {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+            {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+        };
         const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 #ifdef NDEBUG
         const bool enableValidationLayers = false;
@@ -109,6 +113,10 @@ namespace TriangleApplication
         const bool enableValidationLayers = true;        
 #endif
         bool frameBufferResized = false;
+        VkBuffer indexBuffer;
+        VkBuffer vertexBuffer;
+        VkDeviceMemory indexBufferMemory; 
+        VkDeviceMemory vertexBufferMemory;        
         VkCommandPool commandPool;
         VkCommandPool transferCommandPool;
         VkQueue graphicsQueue;
@@ -132,8 +140,6 @@ namespace TriangleApplication
         std::vector<VkImageView> swapChainImageViews;
         VkFormat swapChainImageFormat;
         VkExtent2D swapChainExtend;
-        VkBuffer vertexBuffer;
-        VkDeviceMemory vertexBufferMemory;
         GLFWwindow *window;
     };
 }
