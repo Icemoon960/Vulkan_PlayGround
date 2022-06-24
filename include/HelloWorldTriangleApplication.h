@@ -51,6 +51,8 @@ namespace TriangleApplication
     private:
         void cleanUp();
         void cleanupSwapChain();
+        void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+        void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags propertyFlags, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
         void createCommandBuffers();
         void createCommandPool();
         void createFramebuffers();
