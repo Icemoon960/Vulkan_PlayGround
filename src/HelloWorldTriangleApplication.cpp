@@ -180,7 +180,7 @@ namespace TriangleApplication
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;   
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = commandPool;
+        allocInfo.commandPool = transferCommandPool;
         allocInfo.commandBufferCount = 1;
         VkCommandBuffer commandBuffer;
         vkAllocateCommandBuffers(logicalDevice, &allocInfo, &commandBuffer);
@@ -203,7 +203,7 @@ namespace TriangleApplication
         submitInfo.pCommandBuffers = &commandBuffer;
         vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
         vkQueueWaitIdle(graphicsQueue);
-        vkFreeCommandBuffers(logicalDevice, commandPool, 1, &commandBuffer);
+        vkFreeCommandBuffers(logicalDevice, transferCommandPool, 1, &commandBuffer);
     }
     void HelloWorldTriangleApplication::createCommandBuffers()
     {
@@ -219,18 +219,28 @@ namespace TriangleApplication
             throw std::runtime_error("failed to allocate command buffers!");
         }
     }
-    void HelloWorldTriangleApplication::createCommandPool()
+    void HelloWorldTriangleApplication::createCommandPools()
     {
         QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
 
-        VkCommandPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+        VkCommandPoolCreateInfo cmdPoolInfo{};
+        cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        cmdPoolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
-        if (vkCreateCommandPool(logicalDevice, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
+        if (vkCreateCommandPool(logicalDevice, &cmdPoolInfo, nullptr, &commandPool) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create command pool!");
+        }
+
+        VkCommandPoolCreateInfo transferCmdPoolInfo{};
+        transferCmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        transferCmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        transferCmdPoolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+        if (vkCreateCommandPool(logicalDevice, &cmdPoolInfo, nullptr, &transferCommandPool) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create transfer command pool!");
         }
     }
     void HelloWorldTriangleApplication::createFramebuffers()
@@ -527,13 +537,14 @@ namespace TriangleApplication
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-        std::set<uint32_t> uinqueQueueFamailies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+        std::set<uint32_t> uinqueQueueFamailies = {indices.graphicsFamily.value(), indices.presentFamily.value(), indices.transferFamily.value()};
 
         float queuePriority = 1.0f;
         for (auto queueFamily : uinqueQueueFamailies)
         {
             VkDeviceQueueCreateInfo queueCreateInfo{};
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            //is das richtig
             queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
             queueCreateInfo.queueCount = 1;
             queueCreateInfo.pQueuePriorities = &queuePriority;
@@ -564,6 +575,7 @@ namespace TriangleApplication
         }
         vkGetDeviceQueue(logicalDevice, indices.graphicsFamily.value(), 0, &graphicsQueue);
         vkGetDeviceQueue(logicalDevice, indices.graphicsFamily.value(), 0, &presentQueue);
+        vkGetDeviceQueue(logicalDevice, indices.transferFamily.value(), 0, &transferQueue);
     }
     VkShaderModule HelloWorldTriangleApplication::createShaderModule(const std::vector<char> &code)
     {
@@ -612,13 +624,13 @@ namespace TriangleApplication
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
         QueueFamilyIndices indicies = findQueueFamilies(physicalDevice);
-        uint32_t queueFamilyIndices[]{indicies.graphicsFamily.value(), indicies.presentFamily.value()};
+        uint32_t queueFamilyIndices[]{indicies.graphicsFamily.value(), indicies.presentFamily.value(), indicies.presentFamily.value()};
 
-        if (indicies.graphicsFamily != indicies.graphicsFamily)
+        if (indicies.graphicsFamily != indicies.presentFamily && indicies.graphicsFamily != indicies.transferFamily)
         {
             // Images can be used across multiple queue families without explicit ownership transfers.
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-            createInfo.queueFamilyIndexCount = 2;
+            createInfo.queueFamilyIndexCount = 3;
             createInfo.pQueueFamilyIndices = queueFamilyIndices;
         }
         else
@@ -819,7 +831,11 @@ namespace TriangleApplication
                 {
                     indices.presentFamily = i;
                 }
-                indices.graphicsFamily = i;
+                indices.graphicsFamily = i;                
+            }else if(queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT){
+                indices.transferFamily = i;
+            }
+            if(indices.isComplete()){
                 break;
             }
             i++;
@@ -904,7 +920,7 @@ namespace TriangleApplication
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
-        createCommandPool();
+        createCommandPools();
         createVertexBuffer();
         createCommandBuffers();
         createSyncObjects();
@@ -1087,7 +1103,7 @@ namespace TriangleApplication
 #pragma region QueueFamilyIndices
     bool QueueFamilyIndices::isComplete()
     {
-        return graphicsFamily.has_value() && presentFamily.has_value();
+        return graphicsFamily.has_value() && presentFamily.has_value() && transferFamily.has_value();
     }
 #pragma endregion
 #pragma region Vertex

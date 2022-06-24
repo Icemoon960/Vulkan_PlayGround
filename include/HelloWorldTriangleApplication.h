@@ -40,6 +40,7 @@ namespace TriangleApplication
     {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
+        std::optional<uint32_t> transferFamily;
         bool isComplete();
     };
 
@@ -54,7 +55,7 @@ namespace TriangleApplication
         void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
         void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags propertyFlags, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
         void createCommandBuffers();
-        void createCommandPool();
+        void createCommandPools();
         void createFramebuffers();
         void createGraphicsPipeline();
         void createInstace();
@@ -105,17 +106,19 @@ namespace TriangleApplication
 #ifdef NDEBUG
         const bool enableValidationLayers = false;
 #else
-        const bool enableValidationLayers = true;
+        const bool enableValidationLayers = true;        
 #endif
         bool frameBufferResized = false;
         VkCommandPool commandPool;
-        VkDebugUtilsMessengerEXT debugMessenger;
+        VkCommandPool transferCommandPool;
         VkQueue graphicsQueue;
+        VkQueue presentQueue;
+        VkQueue transferQueue;
+        VkDebugUtilsMessengerEXT debugMessenger;
         VkPipeline graphicsPipeline;
         VkInstance instance;
         VkDevice logicalDevice;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-        VkQueue presentQueue;
         VkPipelineLayout pipelineLayout;
         VkRenderPass renderPass;
         VkSurfaceKHR surface;
