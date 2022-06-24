@@ -1,11 +1,11 @@
 #include <vulkan/vulkan.h>
 
 #include <iostream>
-#include <HelloWorldTriangleApplication.h>
+#include <KnobyApp.h>
 
 int main(int argc, char **argv)
 {
-    TriangleApplication::HelloWorldTriangleApplication app;
+    TriangleApplication::KnobyApp app;
 
     try
     {
